@@ -1,6 +1,25 @@
 # @justrandomnickname/capacitor-app-version-manager
 
-Description
+A Capacitor plugin for checking app versions and showing smart update notifications with intelligent scheduling.
+
+## Features
+
+✅ **Version Management** - Get current and App Store versions  
+✅ **Semantic Versioning** - Proper version comparison (1.2.3 < 1.2.4)  
+✅ **Native Alerts** - Beautiful native update dialogs  
+✅ **Smart Scheduling** - Show notifications at controlled intervals (daily, weekly, monthly)  
+✅ **Customizable UI** - Custom messages, titles, and button texts with placeholders  
+✅ **Auto Country Detection** - Automatic region detection or manual override  
+✅ **Custom App Store Links** - Direct users to your app page  
+✅ **Timer Reset** - Resets when user interacts with alert  
+
+## Platform Support
+
+| Platform | Status |
+|----------|--------|
+| iOS      | ✅ Full support |
+| Android  | ⏳ Coming soon |
+| Web      | ❌ Not supported |
 
 ## Install
 
@@ -9,29 +28,354 @@ npm install @justrandomnickname/capacitor-app-version-manager
 npx cap sync
 ```
 
+## Usage Examples
+
+### Basic Usage
+
+```typescript
+import { AppVersionManager } from '@justrandomnickname/capacitor-app-version-manager';
+
+// Simple check and notify
+const { notified } = await AppVersionManager.notifyNewRelease();
+if (notified) {
+  console.log('User was notified about the update');
+}
+```
+
+### Check for Updates (No UI)
+
+```typescript
+// Check if update is available without showing any UI
+const { updateAvailable, app } = await AppVersionManager.checkForUpdate();
+
+if (updateAvailable) {
+  console.log(`New version ${app.release.version} is available!`);
+  console.log(`Current version: ${app.current.version}`);
+  
+  // Show your custom UI or handle the update
+}
+```
+
+### Get Version Information
+
+```typescript
+// Get detailed version info
+const { app } = await AppVersionManager.getCurrentVersion();
+
+console.log('Current version:', app.current.version);        // "1.2.3"
+console.log('Current build:', app.current.buildNumber);      // "42"
+console.log('Latest version:', app.release.version);         // "1.3.0"
+console.log('Bundle ID:', app.bundleIdentifier);             // "com.example.app"
+```
+
+### Custom Messages with Placeholders
+
+```typescript
+// Use #current and #release placeholders
+await AppVersionManager.notifyNewRelease({
+  options: {
+    title: "Update Available",
+    message: "Version #release is now available! You're using #current.",
+    buttonUpdateText: "Download Now",
+    buttonCloseText: "Maybe Later"
+  }
+});
+
+// Result: "Version 2.0.0 is now available! You're using 1.5.0."
+```
+
+### Smart Scheduling
+
+```typescript
+// Show notification at most once per week
+await AppVersionManager.notifyNewRelease({
+  options: {
+    frequency: "weekly",
+    message: "A new version (#release) is available!"
+  }
+});
+
+// When user closes or clicks update → timer resets
+// Won't show again for 7 days
+```
+
+### Check Scheduler Status
+
+```typescript
+// Get detailed information when notification is skipped
+const result = await AppVersionManager.notifyNewRelease({
+  options: { frequency: "monthly" }
+});
+
+if (result.skippedByScheduler) {
+  console.log('Notification skipped by scheduler');
+  console.log('Last shown:', result.schedulerDebugInfo?.lastNotificationDate);
+  console.log('Days since:', result.schedulerDebugInfo?.daysSinceNotification);
+}
+```
+
+### Force Notification
+
+```typescript
+// Show notification regardless of version comparison
+await AppVersionManager.notifyNewRelease({
+  options: {
+    forceNotify: true, // Show even if versions are equal
+    frequency: "daily",
+    message: "Check out the new features!"
+  }
+});
+```
+
+### Custom App Store Link
+
+```typescript
+// Use a custom App Store URL
+await AppVersionManager.notifyNewRelease({
+  options: {
+    appStoreLink: "https://apps.apple.com/us/app/myapp/id123456789",
+    message: "Update available!"
+  }
+});
+```
+
+### Specify Country and Bundle ID
+
+```typescript
+// Useful for testing or multi-app scenarios
+await AppVersionManager.notifyNewRelease({
+  iosBundleId: "com.example.myapp",
+  country: "us",
+  options: {
+    forceCountry: true, // Use specified country instead of auto-detect
+    frequency: "weekly"
+  }
+});
+```
+
+### Complete Example
+
+```typescript
+import { AppVersionManager } from '@justrandomnickname/capacitor-app-version-manager';
+
+async function checkAppUpdate() {
+  try {
+    // Check for update with custom settings
+    const result = await AppVersionManager.notifyNewRelease({
+      country: "kz",
+      options: {
+        frequency: "weekly",
+        title: "Обновление доступно",
+        message: "Доступна версия #release! У вас установлена #current.",
+        buttonUpdateText: "Обновить",
+        buttonCloseText: "Позже",
+        forceCountry: false // Auto-detect if possible
+      }
+    });
+
+    if (result.notified) {
+      console.log('✅ User was notified');
+    } else if (result.skippedByScheduler) {
+      console.log('⏭️ Skipped - shown recently');
+      console.log(`Last shown: ${result.schedulerDebugInfo?.daysSinceNotification} days ago`);
+    } else {
+      console.log('ℹ️ App is up to date');
+    }
+  } catch (error) {
+    console.error('Error checking for updates:', error);
+  }
+}
+
+// Call on app launch
+checkAppUpdate();
+```
+
+## How It Works
+
+### Version Comparison
+- Fetches current version from `Info.plist` (iOS)
+- Fetches latest version from iTunes Search API
+- Compares using semantic versioning rules (major.minor.patch)
+
+### Notification Scheduling
+- Stores last notification/dismiss date in `UserDefaults`
+- Checks if enough time has passed before showing again
+- Timer resets when user interacts with the alert (close or update)
+- Frequency options: `always`, `daily`, `weekly`, `monthly`
+
+### Country Detection
+- Automatically detects device country using `Locale.current.regionCode`
+- Falls back to provided country code if auto-detection fails
+- Useful for testing on simulators or region-specific App Stores
+
+### App Store Integration
+- Automatically retrieves `trackId` from iTunes API
+- Generates App Store URL: `itms-apps://itunes.apple.com/{country}/app/id{trackId}`
+- Fallback to HTTPS URL for simulators
+- Supports custom App Store links
+
 ## API
 
 <docgen-index>
 
-* [`echo(...)`](#echo)
+* [`getCurrentVersion(...)`](#getcurrentversion)
+* [`checkForUpdate(...)`](#checkforupdate)
+* [`notifyNewRelease(...)`](#notifynewrelease)
+* [Interfaces](#interfaces)
+* [Type Aliases](#type-aliases)
 
 </docgen-index>
 
 <docgen-api>
 <!--Update the source file JSDoc comments and rerun docgen to update the docs below-->
 
-### echo(...)
+### getCurrentVersion(...)
 
 ```typescript
-echo(options: { value: string; }) => Promise<{ value: string; }>
+getCurrentVersion(options?: GetCurrentVersionProps | undefined) => Promise<{ app: AppInfo; }>
 ```
 
-| Param         | Type                            |
-| ------------- | ------------------------------- |
-| **`options`** | <code>{ value: string; }</code> |
+Get the current app version information.
 
-**Returns:** <code>Promise&lt;{ value: string; }&gt;</code>
+| Param         | Type                                                                      | Description                 |
+| ------------- | ------------------------------------------------------------------------- | --------------------------- |
+| **`options`** | <code><a href="#getcurrentversionprops">GetCurrentVersionProps</a></code> | Get current version options |
+
+**Returns:** <code>Promise&lt;{ app: <a href="#appinfo">AppInfo</a>; }&gt;</code>
+
+**Since:** 1.0.0
 
 --------------------
+
+
+### checkForUpdate(...)
+
+```typescript
+checkForUpdate(options?: GetCurrentVersionProps | undefined) => Promise<{ updateAvailable: boolean; app: AppInfo; }>
+```
+
+Check for updates without showing any alert.
+
+| Param         | Type                                                                      | Description                 |
+| ------------- | ------------------------------------------------------------------------- | --------------------------- |
+| **`options`** | <code><a href="#getcurrentversionprops">GetCurrentVersionProps</a></code> | Get current version options |
+
+**Returns:** <code>Promise&lt;{ updateAvailable: boolean; app: <a href="#appinfo">AppInfo</a>; }&gt;</code>
+
+**Since:** 1.0.0
+
+--------------------
+
+
+### notifyNewRelease(...)
+
+```typescript
+notifyNewRelease(options?: NotifyNewReleaseProps | undefined) => Promise<{ notified: boolean; app: AppInfo; skippedByScheduler?: boolean; schedulerDebugInfo?: SchedulerDebugInfo; }>
+```
+
+Check for updates and show a native alert if a new version is available.
+Supports scheduling to avoid showing notifications too frequently.
+
+| Param         | Type                                                                    | Description                |
+| ------------- | ----------------------------------------------------------------------- | -------------------------- |
+| **`options`** | <code><a href="#notifynewreleaseprops">NotifyNewReleaseProps</a></code> | Notify new release options |
+
+**Returns:** <code>Promise&lt;{ notified: boolean; app: <a href="#appinfo">AppInfo</a>; skippedByScheduler?: boolean; schedulerDebugInfo?: <a href="#schedulerdebuginfo">SchedulerDebugInfo</a>; }&gt;</code>
+
+**Since:** 1.0.0
+
+--------------------
+
+
+### Interfaces
+
+
+#### AppInfo
+
+Information about the app versions.
+
+| Prop                   | Type                                        | Description                                         | Since |
+| ---------------------- | ------------------------------------------- | --------------------------------------------------- | ----- |
+| **`current`**          | <code><a href="#version">Version</a></code> | Current installed version of the app.               | 1.0.0 |
+| **`release`**          | <code><a href="#version">Version</a></code> | Latest released version available in the App Store. | 1.0.0 |
+| **`bundleIdentifier`** | <code>string</code>                         | iOS Bundle Identifier of the app.                   | 1.0.0 |
+
+
+#### Version
+
+<a href="#version">Version</a> information of the app.
+
+| Prop                | Type                | Description                                            |
+| ------------------- | ------------------- | ------------------------------------------------------ |
+| **`buildNumber`**   | <code>string</code> | Build number (e.g., "100").                            |
+| **`version`**       | <code>string</code> | <a href="#version">Version</a> number (e.g., "1.0.0"). |
+| **`versionString`** | <code>string</code> | Full version string (e.g., "1.0.0 (100)").             |
+
+
+#### GetCurrentVersionProps
+
+| Prop              | Type                                                                          | Description                                               | Since |
+| ----------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------- | ----- |
+| **`iosBundleId`** | <code>string</code>                                                           | iOS Bundle Identifier of the app.                         | 1.0.0 |
+| **`country`**     | <code>string</code>                                                           | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
+| **`options`**     | <code><a href="#getcurrentversionoptions">GetCurrentVersionOptions</a></code> | Options for getting the current version.                  | 1.0.0 |
+
+
+#### GetCurrentVersionOptions
+
+Options for getting the current app version.
+
+| Prop               | Type                 | Description                                               | Since |
+| ------------------ | -------------------- | --------------------------------------------------------- | ----- |
+| **`country`**      | <code>string</code>  | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
+| **`forceCountry`** | <code>boolean</code> | Force the use of the specified country code.              | 1.0.0 |
+
+
+#### SchedulerDebugInfo
+
+Debug information about the scheduler used for notifications.
+
+| Prop                        | Type                                            | Description                                                                     | Since |
+| --------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- | ----- |
+| **`frequency`**             | <code><a href="#frequency">Frequency</a></code> | The frequency setting used for scheduling notifications.                        | 1.0.0 |
+| **`shouldShow`**            | <code>boolean</code>                            | Indicates whether a notification should be shown based on the scheduling rules. | 1.0.0 |
+| **`lastNotificationDate`**  | <code>string</code>                             | The date when the last notification was shown, if available.                    | 1.0.0 |
+| **`lastDismissDate`**       | <code>string</code>                             | The date when the last notification was dismissed, if available.                | 1.0.0 |
+| **`daysSinceNotification`** | <code>number</code>                             | The number of days since the last notification was shown.                       | 1.0.0 |
+| **`daysSinceDismiss`**      | <code>number</code>                             | The number of days since the last notification was dismissed.                   | 1.0.0 |
+
+
+#### NotifyNewReleaseProps
+
+| Prop              | Type                                                                        | Description                                               | Since |
+| ----------------- | --------------------------------------------------------------------------- | --------------------------------------------------------- | ----- |
+| **`iosBundleId`** | <code>string</code>                                                         | iOS Bundle Identifier of the app.                         | 1.0.0 |
+| **`country`**     | <code>string</code>                                                         | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
+| **`options`**     | <code><a href="#notifynewreleaseoptions">NotifyNewReleaseOptions</a></code> | Options for notifying about a new release.                | 1.0.0 |
+
+
+#### NotifyNewReleaseOptions
+
+| Prop                        | Type                                            | Description                                                         | Since |
+| --------------------------- | ----------------------------------------------- | ------------------------------------------------------------------- | ----- |
+| **`message`**               | <code>string</code>                             | Message of the update alert.                                        | 1.0.0 |
+| **`title`**                 | <code>string</code>                             | Title of the update alert.                                          | 1.0.0 |
+| **`frequency`**             | <code><a href="#frequency">Frequency</a></code> | <a href="#frequency">Frequency</a> of showing update notifications. | 1.0.0 |
+| **`buttonCloseText`**       | <code>string</code>                             | Text for the button that closes the alert.                          | 1.0.0 |
+| **`buttonUpdateText`**      | <code>string</code>                             | Text for the button that updates the app.                           | 1.0.0 |
+| **`buttonForceUpdateText`** | <code>string</code>                             | Text for the button that forces the update.                         | 1.0.0 |
+| **`forceNotify`**           | <code>boolean</code>                            |                                                                     |       |
+| **`appStoreLink`**          | <code>string</code>                             | Link to the app store page for the app.                             | 1.0.0 |
+
+
+### Type Aliases
+
+
+#### Frequency
+
+<a href="#frequency">Frequency</a> options for update notifications.
+Available options: "always", "daily", "weekly", "monthly".
+
+<code>"always" | "daily" | "weekly" | "monthly"</code>
 
 </docgen-api>
