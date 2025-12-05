@@ -172,6 +172,29 @@ export interface SchedulerDebugInfo {
   daysSinceDismiss?: number;
 }
 
+export interface NotifyNewReleaseResult {
+  /**
+   * Indicates whether the user was notified about the new release.
+   * @since 1.0.0
+   */
+  notified: boolean;
+  /**
+   * Information about the app versions.
+   * @since 1.0.0
+   */
+  app: AppInfo;
+  /**
+   * Indicates whether the notification was skipped by the scheduler.
+   * @since 1.0.0
+   */
+  skippedByScheduler?: boolean;
+  /**
+   * Debug information about the notification scheduler.
+   * @since 1.0.0
+   */
+  schedulerDebugInfo?: SchedulerDebugInfo;
+}
+
 export interface AppVersionManagerPlugin {
   /**
    * Get the current app version information.
@@ -196,7 +219,7 @@ export interface AppVersionManagerPlugin {
    * Supports scheduling to avoid showing notifications too frequently.
    * @since 1.0.0
    * @param { NotifyNewReleaseProps } options Notify new release options
-   * @returns { Promise<{ notified: boolean; app: AppInfo; skippedByScheduler?: boolean; schedulerDebugInfo?: SchedulerDebugInfo }> } A promise that resolves with notification result and app info
+   * @returns { Promise<NotifyNewReleaseResult> }
    */
   notifyNewRelease(options?: NotifyNewReleaseProps): Promise<{ 
     notified: boolean; 

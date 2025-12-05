@@ -232,7 +232,7 @@ async function notifyAboutCoffee() {
 ### getCurrentVersion(...)
 
 ```typescript
-getCurrentVersion(options?: GetCurrentVersionProps | undefined) => any
+getCurrentVersion(options?: GetCurrentVersionProps | undefined) => Promise<{ app: AppInfo; }>
 ```
 
 Get the current app version information.
@@ -241,7 +241,7 @@ Get the current app version information.
 | ------------- | ------------------------------------------------------------------------- | --------------------------- |
 | **`options`** | <code><a href="#getcurrentversionprops">GetCurrentVersionProps</a></code> | Get current version options |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ app: <a href="#appinfo">AppInfo</a>; }&gt;</code>
 
 **Since:** 1.0.0
 
@@ -251,7 +251,7 @@ Get the current app version information.
 ### checkForUpdate(...)
 
 ```typescript
-checkForUpdate(options?: GetCurrentVersionProps | undefined) => any
+checkForUpdate(options?: GetCurrentVersionProps | undefined) => Promise<{ updateAvailable: boolean; app: AppInfo; }>
 ```
 
 Check for updates without showing any alert.
@@ -260,7 +260,7 @@ Check for updates without showing any alert.
 | ------------- | ------------------------------------------------------------------------- | --------------------------- |
 | **`options`** | <code><a href="#getcurrentversionprops">GetCurrentVersionProps</a></code> | Get current version options |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ updateAvailable: boolean; app: <a href="#appinfo">AppInfo</a>; }&gt;</code>
 
 **Since:** 1.0.0
 
@@ -270,7 +270,7 @@ Check for updates without showing any alert.
 ### notifyNewRelease(...)
 
 ```typescript
-notifyNewRelease(options?: NotifyNewReleaseProps | undefined) => any
+notifyNewRelease(options?: NotifyNewReleaseProps | undefined) => Promise<{ notified: boolean; app: AppInfo; skippedByScheduler?: boolean; schedulerDebugInfo?: SchedulerDebugInfo; }>
 ```
 
 Check for updates and show a native alert if a new version is available.
@@ -280,7 +280,7 @@ Supports scheduling to avoid showing notifications too frequently.
 | ------------- | ----------------------------------------------------------------------- | -------------------------- |
 | **`options`** | <code><a href="#notifynewreleaseprops">NotifyNewReleaseProps</a></code> | Notify new release options |
 
-**Returns:** <code>any</code>
+**Returns:** <code>Promise&lt;{ notified: boolean; app: <a href="#appinfo">AppInfo</a>; skippedByScheduler?: boolean; schedulerDebugInfo?: <a href="#schedulerdebuginfo">SchedulerDebugInfo</a>; }&gt;</code>
 
 **Since:** 1.0.0
 
@@ -288,25 +288,6 @@ Supports scheduling to avoid showing notifications too frequently.
 
 
 ### Interfaces
-
-
-#### GetCurrentVersionProps
-
-| Prop              | Type                                                                          | Description                                               | Since |
-| ----------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------- | ----- |
-| **`iosBundleId`** | <code>string</code>                                                           | iOS Bundle Identifier of the app.                         | 1.0.0 |
-| **`country`**     | <code>string</code>                                                           | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
-| **`options`**     | <code><a href="#getcurrentversionoptions">GetCurrentVersionOptions</a></code> | Options for getting the current version.                  | 1.0.0 |
-
-
-#### GetCurrentVersionOptions
-
-Options for getting the current app version.
-
-| Prop               | Type                 | Description                                               | Since |
-| ------------------ | -------------------- | --------------------------------------------------------- | ----- |
-| **`country`**      | <code>string</code>  | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
-| **`forceCountry`** | <code>boolean</code> | Force the use of the specified country code.              | 1.0.0 |
 
 
 #### AppInfo
@@ -331,6 +312,39 @@ Information about the app versions.
 | **`versionString`** | <code>string</code> | Full version string (e.g., "1.0.0 (100)").             |
 
 
+#### GetCurrentVersionProps
+
+| Prop              | Type                                                                          | Description                                               | Since |
+| ----------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------- | ----- |
+| **`iosBundleId`** | <code>string</code>                                                           | iOS Bundle Identifier of the app.                         | 1.0.0 |
+| **`country`**     | <code>string</code>                                                           | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
+| **`options`**     | <code><a href="#getcurrentversionoptions">GetCurrentVersionOptions</a></code> | Options for getting the current version.                  | 1.0.0 |
+
+
+#### GetCurrentVersionOptions
+
+Options for getting the current app version.
+
+| Prop               | Type                 | Description                                               | Since |
+| ------------------ | -------------------- | --------------------------------------------------------- | ----- |
+| **`country`**      | <code>string</code>  | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
+| **`forceCountry`** | <code>boolean</code> | Force the use of the specified country code.              | 1.0.0 |
+
+
+#### SchedulerDebugInfo
+
+Debug information about the scheduler used for notifications.
+
+| Prop                        | Type                                            | Description                                                                     | Since |
+| --------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- | ----- |
+| **`frequency`**             | <code><a href="#frequency">Frequency</a></code> | The frequency setting used for scheduling notifications.                        | 1.0.0 |
+| **`shouldShow`**            | <code>boolean</code>                            | Indicates whether a notification should be shown based on the scheduling rules. | 1.0.0 |
+| **`lastNotificationDate`**  | <code>string</code>                             | The date when the last notification was shown, if available.                    | 1.0.0 |
+| **`lastDismissDate`**       | <code>string</code>                             | The date when the last notification was dismissed, if available.                | 1.0.0 |
+| **`daysSinceNotification`** | <code>number</code>                             | The number of days since the last notification was shown.                       | 1.0.0 |
+| **`daysSinceDismiss`**      | <code>number</code>                             | The number of days since the last notification was dismissed.                   | 1.0.0 |
+
+
 #### NotifyNewReleaseProps
 
 | Prop              | Type                                                                        | Description                                               | Since |
@@ -352,20 +366,6 @@ Information about the app versions.
 | **`buttonForceUpdateText`** | <code>string</code>                             | Text for the button that forces the update.                         | 1.0.0 |
 | **`forceNotify`**           | <code>boolean</code>                            |                                                                     |       |
 | **`appStoreLink`**          | <code>string</code>                             | Link to the app store page for the app.                             | 1.0.0 |
-
-
-#### SchedulerDebugInfo
-
-Debug information about the scheduler used for notifications.
-
-| Prop                        | Type                                            | Description                                                                     | Since |
-| --------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- | ----- |
-| **`frequency`**             | <code><a href="#frequency">Frequency</a></code> | The frequency setting used for scheduling notifications.                        | 1.0.0 |
-| **`shouldShow`**            | <code>boolean</code>                            | Indicates whether a notification should be shown based on the scheduling rules. | 1.0.0 |
-| **`lastNotificationDate`**  | <code>string</code>                             | The date when the last notification was shown, if available.                    | 1.0.0 |
-| **`lastDismissDate`**       | <code>string</code>                             | The date when the last notification was dismissed, if available.                | 1.0.0 |
-| **`daysSinceNotification`** | <code>number</code>                             | The number of days since the last notification was shown.                       | 1.0.0 |
-| **`daysSinceDismiss`**      | <code>number</code>                             | The number of days since the last notification was dismissed.                   | 1.0.0 |
 
 
 ### Type Aliases
