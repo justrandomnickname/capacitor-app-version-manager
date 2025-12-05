@@ -2,7 +2,7 @@
 //  StoreVersionFetcher.swift
 //  App
 //
-//  Created by   TeamCity Agent on 02.12.2025.
+//  Created by TeamCity Agent on 02.12.2025.
 //
 
 import Foundation
@@ -15,6 +15,7 @@ public class StoreVersionFetcher {
         options: AppVersionManagerOptions?,
         completion: @escaping (AppVersion?) -> Void
     ) {
+
         let finalOptions = options ?? AppVersionManagerOptions()
         let finalBundleId = bundleId ?? getBundleIdentifier()
         
@@ -22,6 +23,7 @@ public class StoreVersionFetcher {
             completion(nil)
             return
         }
+
         
         guard let url = buildItunesURL(bundleId: bundleId, country: country, options: finalOptions) else {
             completion(nil)
@@ -52,13 +54,15 @@ public class StoreVersionFetcher {
     }
     
     private func performRequest(url: URL, completion: @escaping (AppVersion?) -> Void) {
-        let task = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-            guard let self = self else {
-                completion(nil)
-                return
-            }
-            
-            if error != nil {
+        // ✅ Добавляем конфигурацию сессии, чтобы избежать кэширования
+        let config = URLSessionConfiguration.default
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        config.urlCache = nil
+        
+        let session: URLSession = URLSession(configuration: config)
+
+        let task = session.dataTask(with: url) { data, response, error in
+            if let error = error {
                 completion(nil)
                 return
             }
@@ -69,6 +73,7 @@ public class StoreVersionFetcher {
             }
             
             let appVersion = self.parseItunesResponse(data: data)
+            
             completion(appVersion)
         }
         
@@ -81,7 +86,11 @@ public class StoreVersionFetcher {
                 return nil
             }
             
-            guard let results = json["results"] as? [[String: Any]], !results.isEmpty else {
+            guard let results = json["results"] as? [[String: Any]] else {
+                return nil
+            }
+            
+            if results.isEmpty {
                 return nil
             }
             
