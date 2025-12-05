@@ -24,7 +24,7 @@ public class StoreVersionFetcher {
             return
         }
 
-        
+
         guard let url = buildItunesURL(bundleId: bundleId, country: country, options: finalOptions) else {
             completion(nil)
             return
@@ -54,7 +54,6 @@ public class StoreVersionFetcher {
     }
     
     private func performRequest(url: URL, completion: @escaping (AppVersion?) -> Void) {
-        // ✅ Добавляем конфигурацию сессии, чтобы избежать кэширования
         let config = URLSessionConfiguration.default
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
         config.urlCache = nil

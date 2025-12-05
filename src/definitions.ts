@@ -39,6 +39,8 @@ export interface AppInfo {
   bundleIdentifier: string;
 }
 
+export type SemVer = 'major' | 'minor' | 'patch'
+
 /**
  * Frequency options for update notifications.
  * Available options: "always", "daily", "weekly", "monthly".
@@ -87,17 +89,19 @@ export interface NotifyNewReleaseOptions extends GetCurrentVersionOptions {
    * @since 1.0.0
    */
   buttonUpdateText?: string;
-  /**
-   * Text for the button that forces the update.
-   * @since 1.0.0
-   */
-  buttonForceUpdateText?: string;
   forceNotify?: boolean;
   /**
    * Link to the app store page for the app.
    * @since 1.0.0
    */
   appStoreLink?: string;
+  /**
+   * Indicates if the update is critical and should be forced to install.
+   * For example if set to 'major', UI will be blocked if:
+   * - The current version is less than the latest major version
+   * @since 1.0.3
+   */
+  critical?: SemVer
 }
 
 export interface GetCurrentVersionProps {
@@ -224,6 +228,7 @@ export interface AppVersionManagerPlugin {
   notifyNewRelease(options?: NotifyNewReleaseProps): Promise<{ 
     notified: boolean; 
     app: AppInfo;
+    isCritical?: boolean;
     skippedByScheduler?: boolean;
     schedulerDebugInfo?: SchedulerDebugInfo;
   }>;

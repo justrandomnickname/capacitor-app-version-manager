@@ -28,9 +28,9 @@ public class UpdateAlertPresenter {
         self.scheduler = scheduler
     }
     
-    public func present(onPresented: @escaping () -> Void, country: String?) {
+    public func present(onPresented: @escaping () -> Void, country: String?, isCritical: Bool) {
         DispatchQueue.main.async {
-            let title = self.options.title ?? self.getLocalizedTitle()
+            let title = self.getEffectiveTitle(isCritical: isCritical)
             let message = self.parseMessage()
             let closeButtonTitle = self.options.buttonCloseText ?? self.getLocalizedCloseButton()
             let updateButtonTitle = self.options.buttonUpdateText ?? self.getLocalizedUpdateButton()
@@ -41,19 +41,23 @@ public class UpdateAlertPresenter {
                 preferredStyle: .alert
             )
             
-            alert.addAction(UIAlertAction(
-                title: closeButtonTitle,
-                style: .cancel,
-                handler: { _ in
-                    self.scheduler.markNotificationDismissed()
-                }
-            ))
+            if isCritical == false {
+                alert.addAction(UIAlertAction(
+                    title: closeButtonTitle,
+                    style: .cancel,
+                    handler: { _ in
+                        self.scheduler.markNotificationDismissed()
+                    }
+                ))
+            }
             
             alert.addAction(UIAlertAction(
                 title: updateButtonTitle,
                 style: .default,
                 handler: { _ in
-                    self.scheduler.markNotificationDismissed()
+                    if !isCritical {
+                        self.scheduler.markNotificationDismissed()
+                    }
                     
                     if let appStoreLink = self.options.appStoreLink,
                        !appStoreLink.isEmpty,
@@ -73,6 +77,24 @@ public class UpdateAlertPresenter {
             } else {
                 onPresented()
             }
+        }
+    }
+    
+    private func getEffectiveTitle(isCritical: Bool) -> String {
+        if let customTitle = self.options.title {
+            return isCritical ? "⚠️ \(customTitle)" : customTitle
+        }
+        
+        if isCritical {
+            return NSLocalizedString(
+                "update_required_title",
+                tableName: nil,
+                bundle: Bundle.main,
+                value: "⚠️ Update Required",
+                comment: "Title for critical update"
+            )
+        } else {
+            return self.getLocalizedTitle()
         }
     }
     

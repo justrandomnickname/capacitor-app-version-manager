@@ -16,6 +16,13 @@ public enum NotificationFrequency: String {
     case monthly
 }
 
+public enum CriticalUpdateType: String {
+    case major
+    case minor
+    case patch
+}
+
+
 public struct NotifyNewReleaseOptions {
     let forceCountry: Bool
     let forceNotify: Bool?
@@ -24,6 +31,7 @@ public struct NotifyNewReleaseOptions {
     let buttonCloseText: String?
     let buttonUpdateText: String?
     let appStoreLink: String?
+    let critical: CriticalUpdateType?
     let frequency: NotificationFrequency
 
     init(from jsObject: JSObject?) {
@@ -32,6 +40,12 @@ public struct NotifyNewReleaseOptions {
             self.frequency = freq
         } else {
             self.frequency = .always
+        }
+
+        if let criticalString = jsObject?["critical"] as? String {
+            self.critical = CriticalUpdateType(rawValue: criticalString)
+        } else {
+            self.critical = nil
         }
         
         self.forceCountry = jsObject?["forceCountry"] as? Bool ?? true

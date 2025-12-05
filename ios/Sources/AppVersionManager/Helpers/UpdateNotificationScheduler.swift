@@ -19,6 +19,7 @@ public class UpdateNotificationScheduler {
     }
     
     public func shouldShowNotification() -> Bool {
+        
         switch self.options.frequency {
         case .always:
             return true
