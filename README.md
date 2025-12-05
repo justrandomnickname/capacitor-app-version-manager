@@ -232,7 +232,7 @@ async function notifyAboutCoffee() {
 ### getCurrentVersion(...)
 
 ```typescript
-getCurrentVersion(options?: GetCurrentVersionProps | undefined) => Promise<{ app: AppInfo; }>
+getCurrentVersion(options?: GetCurrentVersionProps | undefined) => any
 ```
 
 Get the current app version information.
@@ -241,7 +241,7 @@ Get the current app version information.
 | ------------- | ------------------------------------------------------------------------- | --------------------------- |
 | **`options`** | <code><a href="#getcurrentversionprops">GetCurrentVersionProps</a></code> | Get current version options |
 
-**Returns:** <code>Promise&lt;{ app: <a href="#appinfo">AppInfo</a>; }&gt;</code>
+**Returns:** <code>any</code>
 
 **Since:** 1.0.0
 
@@ -251,7 +251,7 @@ Get the current app version information.
 ### checkForUpdate(...)
 
 ```typescript
-checkForUpdate(options?: GetCurrentVersionProps | undefined) => Promise<{ updateAvailable: boolean; app: AppInfo; }>
+checkForUpdate(options?: GetCurrentVersionProps | undefined) => any
 ```
 
 Check for updates without showing any alert.
@@ -260,7 +260,7 @@ Check for updates without showing any alert.
 | ------------- | ------------------------------------------------------------------------- | --------------------------- |
 | **`options`** | <code><a href="#getcurrentversionprops">GetCurrentVersionProps</a></code> | Get current version options |
 
-**Returns:** <code>Promise&lt;{ updateAvailable: boolean; app: <a href="#appinfo">AppInfo</a>; }&gt;</code>
+**Returns:** <code>any</code>
 
 **Since:** 1.0.0
 
@@ -270,7 +270,7 @@ Check for updates without showing any alert.
 ### notifyNewRelease(...)
 
 ```typescript
-notifyNewRelease(options?: NotifyNewReleaseProps | undefined) => Promise<{ notified: boolean; app: AppInfo; skippedByScheduler?: boolean; schedulerDebugInfo?: SchedulerDebugInfo; }>
+notifyNewRelease(options?: NotifyNewReleaseProps | undefined) => any
 ```
 
 Check for updates and show a native alert if a new version is available.
@@ -280,7 +280,7 @@ Supports scheduling to avoid showing notifications too frequently.
 | ------------- | ----------------------------------------------------------------------- | -------------------------- |
 | **`options`** | <code><a href="#notifynewreleaseprops">NotifyNewReleaseProps</a></code> | Notify new release options |
 
-**Returns:** <code>Promise&lt;{ notified: boolean; app: <a href="#appinfo">AppInfo</a>; skippedByScheduler?: boolean; schedulerDebugInfo?: <a href="#schedulerdebuginfo">SchedulerDebugInfo</a>; }&gt;</code>
+**Returns:** <code>any</code>
 
 **Since:** 1.0.0
 
@@ -288,6 +288,25 @@ Supports scheduling to avoid showing notifications too frequently.
 
 
 ### Interfaces
+
+
+#### GetCurrentVersionProps
+
+| Prop              | Type                                                                          | Description                                               | Since |
+| ----------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------- | ----- |
+| **`iosBundleId`** | <code>string</code>                                                           | iOS Bundle Identifier of the app.                         | 1.0.0 |
+| **`country`**     | <code>string</code>                                                           | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
+| **`options`**     | <code><a href="#getcurrentversionoptions">GetCurrentVersionOptions</a></code> | Options for getting the current version.                  | 1.0.0 |
+
+
+#### GetCurrentVersionOptions
+
+Options for getting the current app version.
+
+| Prop               | Type                 | Description                                               | Since |
+| ------------------ | -------------------- | --------------------------------------------------------- | ----- |
+| **`country`**      | <code>string</code>  | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
+| **`forceCountry`** | <code>boolean</code> | Force the use of the specified country code.              | 1.0.0 |
 
 
 #### AppInfo
@@ -312,23 +331,27 @@ Information about the app versions.
 | **`versionString`** | <code>string</code> | Full version string (e.g., "1.0.0 (100)").             |
 
 
-#### GetCurrentVersionProps
+#### NotifyNewReleaseProps
 
-| Prop              | Type                                                                          | Description                                               | Since |
-| ----------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------- | ----- |
-| **`iosBundleId`** | <code>string</code>                                                           | iOS Bundle Identifier of the app.                         | 1.0.0 |
-| **`country`**     | <code>string</code>                                                           | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
-| **`options`**     | <code><a href="#getcurrentversionoptions">GetCurrentVersionOptions</a></code> | Options for getting the current version.                  | 1.0.0 |
+| Prop              | Type                                                                        | Description                                               | Since |
+| ----------------- | --------------------------------------------------------------------------- | --------------------------------------------------------- | ----- |
+| **`iosBundleId`** | <code>string</code>                                                         | iOS Bundle Identifier of the app.                         | 1.0.0 |
+| **`country`**     | <code>string</code>                                                         | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
+| **`options`**     | <code><a href="#notifynewreleaseoptions">NotifyNewReleaseOptions</a></code> | Options for notifying about a new release.                | 1.0.0 |
 
 
-#### GetCurrentVersionOptions
+#### NotifyNewReleaseOptions
 
-Options for getting the current app version.
-
-| Prop               | Type                 | Description                                               | Since |
-| ------------------ | -------------------- | --------------------------------------------------------- | ----- |
-| **`country`**      | <code>string</code>  | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
-| **`forceCountry`** | <code>boolean</code> | Force the use of the specified country code.              | 1.0.0 |
+| Prop                   | Type                                            | Description                                                                                                                                                                            | Since |
+| ---------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| **`message`**          | <code>string</code>                             | Message of the update alert.                                                                                                                                                           | 1.0.0 |
+| **`title`**            | <code>string</code>                             | Title of the update alert.                                                                                                                                                             | 1.0.0 |
+| **`frequency`**        | <code><a href="#frequency">Frequency</a></code> | <a href="#frequency">Frequency</a> of showing update notifications.                                                                                                                    | 1.0.0 |
+| **`buttonCloseText`**  | <code>string</code>                             | Text for the button that closes the alert.                                                                                                                                             | 1.0.0 |
+| **`buttonUpdateText`** | <code>string</code>                             | Text for the button that updates the app.                                                                                                                                              | 1.0.0 |
+| **`forceNotify`**      | <code>boolean</code>                            |                                                                                                                                                                                        |       |
+| **`appStoreLink`**     | <code>string</code>                             | Link to the app store page for the app.                                                                                                                                                | 1.0.0 |
+| **`critical`**         | <code><a href="#semver">SemVer</a></code>       | Indicates if the update is critical and should be forced to install. For example if set to 'major', UI will be blocked if: - The current version is less than the latest major version | 1.0.3 |
 
 
 #### SchedulerDebugInfo
@@ -345,29 +368,6 @@ Debug information about the scheduler used for notifications.
 | **`daysSinceDismiss`**      | <code>number</code>                             | The number of days since the last notification was dismissed.                   | 1.0.0 |
 
 
-#### NotifyNewReleaseProps
-
-| Prop              | Type                                                                        | Description                                               | Since |
-| ----------------- | --------------------------------------------------------------------------- | --------------------------------------------------------- | ----- |
-| **`iosBundleId`** | <code>string</code>                                                         | iOS Bundle Identifier of the app.                         | 1.0.0 |
-| **`country`**     | <code>string</code>                                                         | Country code for App Store link (e.g., "us", "gb", "de"). | 1.0.0 |
-| **`options`**     | <code><a href="#notifynewreleaseoptions">NotifyNewReleaseOptions</a></code> | Options for notifying about a new release.                | 1.0.0 |
-
-
-#### NotifyNewReleaseOptions
-
-| Prop                        | Type                                            | Description                                                         | Since |
-| --------------------------- | ----------------------------------------------- | ------------------------------------------------------------------- | ----- |
-| **`message`**               | <code>string</code>                             | Message of the update alert.                                        | 1.0.0 |
-| **`title`**                 | <code>string</code>                             | Title of the update alert.                                          | 1.0.0 |
-| **`frequency`**             | <code><a href="#frequency">Frequency</a></code> | <a href="#frequency">Frequency</a> of showing update notifications. | 1.0.0 |
-| **`buttonCloseText`**       | <code>string</code>                             | Text for the button that closes the alert.                          | 1.0.0 |
-| **`buttonUpdateText`**      | <code>string</code>                             | Text for the button that updates the app.                           | 1.0.0 |
-| **`buttonForceUpdateText`** | <code>string</code>                             | Text for the button that forces the update.                         | 1.0.0 |
-| **`forceNotify`**           | <code>boolean</code>                            |                                                                     |       |
-| **`appStoreLink`**          | <code>string</code>                             | Link to the app store page for the app.                             | 1.0.0 |
-
-
 ### Type Aliases
 
 
@@ -377,5 +377,10 @@ Debug information about the scheduler used for notifications.
 Available options: "always", "daily", "weekly", "monthly".
 
 <code>"always" | "daily" | "weekly" | "monthly"</code>
+
+
+#### SemVer
+
+<code>'major' | 'minor' | 'patch'</code>
 
 </docgen-api>

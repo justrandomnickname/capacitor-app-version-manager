@@ -2,7 +2,7 @@
 //  AppVersionManagerPlugin.swift
 //  App
 //
-//  Created by   TeamCity Agent on 02.12.2025.
+//  Created by TeamCity Agent on 02.12.2025.
 //
 import Foundation
 import Capacitor
@@ -18,6 +18,12 @@ public class AppVersionManagerPlugin : CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "getCurrentVersion", returnType: CAPPluginReturnPromise)
     ]
     
+    private struct NotificationDecision {
+        let shouldShow: Bool
+        let reason: String
+        let isCritical: Bool
+    }
+    
     @objc public func checkForUpdate(_ call: CAPPluginCall) {
         let bundleId = call.getString("iosBundleId")
         let country = call.getString("country")
@@ -30,7 +36,7 @@ public class AppVersionManagerPlugin : CAPPlugin, CAPBridgedPlugin {
             options: options,
             call: call
         ) { currentApp, releaseApp, bundleIdentifier in
-            let comparator = VersionComparator(currentApp: currentApp, releaseApp: releaseApp)
+            let comparator = VersionComparator(currentApp: currentApp, releaseApp: releaseApp, criticalUpdateVersion: nil)
             
             call.resolve([
                 "updateAvailable": comparator.shouldNotify,
@@ -56,38 +62,20 @@ public class AppVersionManagerPlugin : CAPPlugin, CAPBridgedPlugin {
             options: options,
             call: call
         ) { currentApp, releaseApp, bundleIdentifier in
-            let comparator = VersionComparator(currentApp: currentApp, releaseApp: releaseApp)
-
-            let shouldNotify: Bool
             
-            if alertOptions.forceNotify == true {
-                shouldNotify = true
-            } else {
-                shouldNotify = comparator.shouldNotify
-            }
+            let comparator = VersionComparator(
+                currentApp: currentApp,
+                releaseApp: releaseApp,
+                criticalUpdateVersion: alertOptions.critical
+            )
             
-
             let scheduler = UpdateNotificationScheduler(_options: alertOptions)
-
-            guard scheduler.shouldShowNotification() else {
-                
-                let appInfo = self.buildAppInfo(
-                    currentApp: currentApp,
-                    releaseApp: releaseApp,
-                    bundleIdentifier: bundleIdentifier
-                )
-                
-                call.resolve([
-                    "notified": false,
-                    "app": appInfo,
-                    "skippedByScheduler": true,
-                    "schedulerDebugInfo": scheduler.getDebugInfo()
-                ])
-                
-                
-                return
-            }
             
+            let decision = self.evaluateNotificationDecision(
+                comparator: comparator,
+                scheduler: scheduler,
+                options: alertOptions
+            )
             
             let appInfo = self.buildAppInfo(
                 currentApp: currentApp,
@@ -95,7 +83,7 @@ public class AppVersionManagerPlugin : CAPPlugin, CAPBridgedPlugin {
                 bundleIdentifier: bundleIdentifier
             )
             
-            if shouldNotify {
+            if decision.shouldShow {
                 self.presentUpdateAlert(
                     currentApp: currentApp,
                     releaseApp: releaseApp,
@@ -103,21 +91,58 @@ public class AppVersionManagerPlugin : CAPPlugin, CAPBridgedPlugin {
                     commonOptions: options,
                     country: country,
                     scheduler: scheduler,
+                    isCritical: decision.isCritical,
                     onPresented: {
                         call.resolve([
                             "notified": true,
-                            "app": appInfo
+                            "reason": decision.reason,
+                            "isCritical": decision.isCritical,
+                            "app": appInfo,
+                            "skippedByScheduler": false,
+                            "schedulerDebugInfo": scheduler.getDebugInfo()
                         ])
                     }
                 )
             } else {
                 call.resolve([
                     "notified": false,
-                    "skippedByScheduler": false,
-                    "app": appInfo
+                    "reason": decision.reason,
+                    "isCritical": decision.isCritical,
+                    "app": appInfo,
+                    "skippedByScheduler": decision.reason == "skipped_by_scheduler",
+                    "schedulerDebugInfo": scheduler.getDebugInfo()
                 ])
             }
         }
+    }
+    
+    private func evaluateNotificationDecision(
+        comparator: VersionComparator,
+        scheduler: UpdateNotificationScheduler,
+        options: NotifyNewReleaseOptions
+    ) -> NotificationDecision {
+        
+        let hasUpdate = comparator.shouldNotify
+        let isCritical = comparator.isUpdateCritical
+        let isForced = options.forceNotify == true
+        
+        if !hasUpdate && !isForced {
+            return NotificationDecision(shouldShow: false, reason: "no_update", isCritical: isCritical)
+        }
+        
+        if isForced {
+            return NotificationDecision(shouldShow: true, reason: "forced", isCritical: isCritical)
+        }
+        
+        if isCritical {
+            return NotificationDecision(shouldShow: true, reason: "critical", isCritical: true)
+        }
+        
+        if scheduler.shouldShowNotification() {
+            return NotificationDecision(shouldShow: true, reason: "scheduled", isCritical: false)
+        }
+        
+        return NotificationDecision(shouldShow: false, reason: "skipped_by_scheduler", isCritical: false)
     }
     
     @objc public func getCurrentVersion(_ call: CAPPluginCall) {
@@ -149,7 +174,6 @@ public class AppVersionManagerPlugin : CAPPlugin, CAPBridgedPlugin {
         call: CAPPluginCall,
         completion: @escaping (AppVersion, AppVersion, String) -> Void
     ) {
-        
         let versionHelper = VersionHelper()
         let storeVersionFetcher = StoreVersionFetcher()
         
@@ -201,18 +225,23 @@ public class AppVersionManagerPlugin : CAPPlugin, CAPBridgedPlugin {
         commonOptions: AppVersionManagerOptions,
         country: String?,
         scheduler: UpdateNotificationScheduler,
+        isCritical: Bool,
         onPresented: @escaping () -> Void
     ) {
         let presenter = UpdateAlertPresenter(
             currentApp: currentApp,
             releaseApp: releaseApp,
             options: alertOptions,
-            scheduler: scheduler,
+            scheduler: scheduler
         )
         
-        let country = CountryHelper(country: country, options: commonOptions)
+        let countryHelper = CountryHelper(country: country, options: commonOptions)
         
-        presenter.present(onPresented: onPresented, country: country.countryCode)
+        presenter.present(
+            onPresented: onPresented,
+            country: countryHelper.countryCode,
+            isCritical: isCritical
+        )
     }
     
     private func getStoreVersionFetchErrorMessage() -> String {
