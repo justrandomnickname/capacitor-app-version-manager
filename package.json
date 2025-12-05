@@ -1,6 +1,6 @@
 {
   "name": "@justrandomnickname/capacitor-app-version-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Capacitor plugin for handling app updates with native alerts and smart scheduling.",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
